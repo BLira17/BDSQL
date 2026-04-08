@@ -4,13 +4,19 @@
 -- ============================================
 
 -- 1. Crear base de datos
-
 DROP DATABASE IF EXISTS ct_usm_postulaciones;
-CREATE DATABASE ct_usm_postulaciones;
-USE ct_usm_postulaciones; 
 
--- 2. Seleccionar base de datos
--- 3. Crear catalogos
+-- Para soportar caracteres especiales en español
+CREATE DATABASE ct_usm_postulaciones
+CHARACTER SET utf8mb4
+COLLATE utf8mb4_spanish_ci;
+
+USE ct_usm_postulaciones;
+
+-- ============================================
+-- 2. Crear catalogos (dominios fijos)
+-- ============================================
+
 CREATE TABLE Tamano_Empresa (
     id_tamano_empresa INT PRIMARY KEY,
     nombre VARCHAR(50) NOT NULL UNIQUE
@@ -33,7 +39,7 @@ CREATE TABLE Region (
 
 CREATE TABLE Sede (
     id_sede INT PRIMARY KEY,
-    nombre VARCHAR(100) NOT NULL
+    nombre VARCHAR(100) NOT NULL UNIQUE
 ) ENGINE=InnoDB;
 
 CREATE TABLE Tipo_persona (
@@ -41,7 +47,9 @@ CREATE TABLE Tipo_persona (
     nombre VARCHAR(30) NOT NULL UNIQUE
 ) ENGINE=InnoDB;
 
--- 4. Poblar catalogos
+-- ============================================
+-- 3. Poblar catalogos
+-- ============================================
 
 INSERT INTO Tamano_Empresa (id_tamano_empresa, nombre) VALUES
 (1, 'Microempresa'),
@@ -52,7 +60,7 @@ INSERT INTO Estado_postulacion (id_estado, nombre) VALUES
 (1, 'En Revision'),
 (2, 'Aprobada'),
 (3, 'Rechazada'),
-(4, 'Cerrada'); 
+(4, 'Cerrada');
 
 INSERT INTO Tipo_iniciativa (id_tipo_iniciativa, nombre) VALUES
 (1, 'Nueva'),
@@ -87,7 +95,9 @@ INSERT INTO Region (id_region, nombre) VALUES
 (15, 'Aysen'),
 (16, 'Magallanes y la Antartica Chilena');
 
--- 5. Crear tablas principales
+-- ============================================
+-- 4. Crear tablas principales
+-- ============================================
 
 CREATE TABLE Empresa (
     rut_empresa VARCHAR(20) PRIMARY KEY,
@@ -114,9 +124,9 @@ CREATE TABLE Postulacion (
     numero_postulacion VARCHAR(20) NOT NULL UNIQUE,
     codigo_interno VARCHAR(20) NOT NULL UNIQUE,
     fecha_postulacion DATE NOT NULL,
-    objetivo_iniciativa VARCHAR(255) NOT NULL,
-    descripcion_posibles_soluciones VARCHAR(255) NOT NULL,
-    resultados_esperados VARCHAR(255) NOT NULL,
+    objetivo_iniciativa TEXT NOT NULL,
+    descripcion_posibles_soluciones TEXT NOT NULL,
+    resultados_esperados TEXT NOT NULL,
     rut_empresa VARCHAR(20) NOT NULL,
     nombre_iniciativa VARCHAR(150) NOT NULL,
     id_tipo_iniciativa INT NOT NULL,
@@ -144,13 +154,15 @@ CREATE TABLE Etapa_cronograma (
     FOREIGN KEY (id_postulacion) REFERENCES Postulacion(id_postulacion)
 ) ENGINE=InnoDB;
 
+-- Una postulacion puede tener multiples documentos adjuntos
 CREATE TABLE Documento_Postulacion (
     id_documento INT PRIMARY KEY,
-    nombre_documento VARCHAR(100) NOT NULL,
+    nombre_documento VARCHAR(150) NOT NULL,
     id_postulacion INT NOT NULL,
     FOREIGN KEY (id_postulacion) REFERENCES Postulacion(id_postulacion)
 ) ENGINE=InnoDB;
 
+-- PK compuesta: una persona no se repite dentro de la misma postulacion
 CREATE TABLE Integrante_postulacion (
     id_postulacion INT NOT NULL,
     rut_persona VARCHAR(20) NOT NULL,
@@ -163,11 +175,11 @@ CREATE TABLE Integrante_postulacion (
     FOREIGN KEY (id_sede) REFERENCES Sede(id_sede)
 ) ENGINE=InnoDB;
 
+-- PK compuesta para modelar la relacion muchos a muchos entre postulacion y sede
 CREATE TABLE Postulacion_sede (
-    id_postulacion INT PRIMARY KEY,
+    id_postulacion INT NOT NULL,
     id_sede INT NOT NULL,
+    PRIMARY KEY (id_postulacion, id_sede),
     FOREIGN KEY (id_postulacion) REFERENCES Postulacion(id_postulacion),
     FOREIGN KEY (id_sede) REFERENCES Sede(id_sede)
 ) ENGINE=InnoDB;
--- id_postulacion como PK hace que cada postulación aparezca solo una vez
--- por lo tanto solo puede tener una sede

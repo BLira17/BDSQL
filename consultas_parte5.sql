@@ -48,6 +48,7 @@ SELECT
     p.numero_postulacion,
     p.nombre_iniciativa,
     e.nombre_empresa,
+    r.nombre AS region_ejecucion,
     GROUP_CONCAT(DISTINCT s.nombre ORDER BY s.nombre SEPARATOR ', ') AS sedes,
     p.presupuesto_total
 FROM Postulacion p
@@ -64,11 +65,9 @@ GROUP BY
     p.numero_postulacion,
     p.nombre_iniciativa,
     e.nombre_empresa,
-    p.presupuesto_total
+    p.presupuesto_total,
+    r.nombre
 ORDER BY p.numero_postulacion;
-
--- Si el profesor quiere otra región, cambia 'Valparaiso' por el nombre deseado.
-
 
 -- =========================================================
 -- 3. Conteo por tipo de iniciativa
@@ -86,7 +85,7 @@ ORDER BY ti.nombre;
 
 -- =========================================================
 -- 4. Equipo de trabajo de una postulación
--- Pregunta: Dado un código interno, ¿quiénes integran el equipo
+-- Pregunta: Dado un código interno: CT-INT-001, ¿quiénes integran el equipo
 -- de trabajo, indicando rut, nombre, tipo, sede, email y rol?
 -- =========================================================
 SELECT
@@ -109,9 +108,6 @@ JOIN Sede s
     ON ip.id_sede = s.id_sede
 WHERE p.codigo_interno = 'CT-INT-001'
 ORDER BY tp.nombre DESC, pe.nombre;
-
--- También puedes filtrar por número de postulación:
--- WHERE p.numero_postulacion = 'POST-2026-001'
 
 
 -- =========================================================
@@ -205,8 +201,8 @@ HAVING
     SUM(CASE WHEN tp.nombre = 'Estudiante' THEN 1 ELSE 0 END) < 5
 ORDER BY p.numero_postulacion;
 
--- Con tus datos actuales probablemente devuelva 0 filas, porque todas cumplen.
--- Para la defensa, conviene tener datos de prueba que rompan esta regla.
+-- Con datos actuales devuelve 0 filas, porque todas cumplen.
+
 
 
 -- =========================================================
@@ -226,7 +222,7 @@ LEFT JOIN Postulacion p
 WHERE p.id_postulacion IS NULL
 ORDER BY e.nombre_empresa;
 
--- Con tus datos actuales probablemente devuelva 0 filas, porque las 6 empresas fueron usadas.
+-- Con datos actuales devuelve 0 filas, porque las 6 empresas fueron usadas.
 
 
 -- =========================================================
@@ -247,6 +243,3 @@ GROUP BY
     p.codigo_interno
 HAVING SUM(ec.plazo_semanas) > 36
 ORDER BY total_semanas DESC, p.numero_postulacion;
-
--- Con tus datos actuales probablemente devuelva 0 filas, porque los cronogramas suman menos de 36 semanas.
--- Para la defensa, conviene tener datos de prueba que superen ese límite.

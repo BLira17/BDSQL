@@ -340,34 +340,80 @@ SELECT 'Postulacion_sede', COUNT(*) FROM Postulacion_sede;
 
 -- (2) Una postulacion completa con JOIN
 SELECT
-    p.id_postulacion,
-    p.numero_postulacion,
-    p.codigo_interno,
+    p.fecha_postulacion,
     p.nombre_iniciativa,
+    ti.nombre AS tipo_iniciativa,
+    p.objetivo_iniciativa,
+    p.descripcion_posibles_soluciones,
+    p.resultados_esperados,
+    p.presupuesto_total,
+
     e.nombre_empresa,
+    e.nombre_representante_empresa,
+    e.mail_representante_empresa,
+    e.telefono_representante_empresa,
+    e.convenio_marco_usm,
+    te.nombre AS tamano_empresa,
+
     re.nombre AS region_ejecucion,
     ri.nombre AS region_impacto,
-    GROUP_CONCAT(DISTINCT s.nombre ORDER BY s.nombre SEPARATOR ', ') AS sedes_asociadas
+    ep.nombre AS estado_postulacion,
+    jefe.nombre AS jefe_carrera,
+    coord.nombre AS coordinador_ct_usm,
+
+    COALESCE(
+        GROUP_CONCAT(DISTINCT s.nombre ORDER BY s.nombre SEPARATOR ', '),
+        'Sin sedes asociadas'
+    ) AS sedes_asociadas,
+
+    COALESCE(
+        GROUP_CONCAT(DISTINCT d.nombre_documento ORDER BY d.nombre_documento SEPARATOR ', '),
+        'Sin documentos adjuntos'
+    ) AS otros_documentos
+
 FROM Postulacion p
 JOIN Empresa e
     ON p.rut_empresa = e.rut_empresa
+JOIN Tamano_Empresa te
+    ON e.id_tamano_empresa = te.id_tamano_empresa
+JOIN Tipo_iniciativa ti
+    ON p.id_tipo_iniciativa = ti.id_tipo_iniciativa
 JOIN Region re
     ON p.id_region_ejecucion = re.id_region
 JOIN Region ri
     ON p.id_region_impacto = ri.id_region
+JOIN Estado_postulacion ep
+    ON p.id_estado_postulacion = ep.id_estado
+JOIN Persona jefe
+    ON p.rut_jefe_carrera = jefe.rut_persona
+JOIN Persona coord
+    ON p.rut_coordinador_ct_usm = coord.rut_persona
 LEFT JOIN Postulacion_sede ps
     ON p.id_postulacion = ps.id_postulacion
 LEFT JOIN Sede s
     ON ps.id_sede = s.id_sede
+LEFT JOIN Documento_Postulacion d
+    ON p.id_postulacion = d.id_postulacion
 WHERE p.id_postulacion = 1
 GROUP BY
-    p.id_postulacion,
-    p.numero_postulacion,
-    p.codigo_interno,
+    p.fecha_postulacion,
     p.nombre_iniciativa,
+    ti.nombre,
+    p.objetivo_iniciativa,
+    p.descripcion_posibles_soluciones,
+    p.resultados_esperados,
+    p.presupuesto_total,
     e.nombre_empresa,
+    e.nombre_representante_empresa,
+    e.mail_representante_empresa,
+    e.telefono_representante_empresa,
+    e.convenio_marco_usm,
+    te.nombre,
     re.nombre,
-    ri.nombre;
+    ri.nombre,
+    ep.nombre,
+    jefe.nombre,
+    coord.nombre;
 
 -- (3) Verificacion regla 3 profesores + 5 estudiantes por postulacion
 SELECT
